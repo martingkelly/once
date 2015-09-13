@@ -40,6 +40,12 @@ if [ "$1" = '-h' ] || [ "$1" = '--help' ]; then
 fi
 
 PROGRAM="$1"
-COMMAND="$@"
+LOCKFILE="/tmp/once-lock-$PROGRAM"
+exec 3>"$LOCKFILE"
+if ! flock --exclusive --nonblock 3; then
+    exit $?
+fi
 
-flock --exclusive --nonblock "/tmp/once-lock-$PROGRAM" -c "$COMMAND"
+"$@"
+
+exec 3>&-
