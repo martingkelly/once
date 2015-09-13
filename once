@@ -24,6 +24,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+usage() {
+    cat <<EOF
+once is a simple script used to implement a shell singleton. By wrapping a
+command invocation with once, the program is guaranteed to be the only one
+among others wrapped with once.
+
+Usage: once <COMMAND>
+EOF
+}
+
+if [ "$1" = '-h' ] || [ "$1" = '--help' ]; then
+    usage
+    exit
+fi
+
 PROGRAM="$1"
 COMMAND="$@"
 
