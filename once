@@ -43,7 +43,7 @@ PROGRAM="$1"
 LOCKFILE="/var/lock/once-lock-$PROGRAM"
 exec 3>"$LOCKFILE"
 if ! flock --exclusive --nonblock 3; then
-    exit $?
+    exit 1
 fi
 
 "$@"
