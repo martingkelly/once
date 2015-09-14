@@ -40,7 +40,7 @@ if [ "$1" = '-h' ] || [ "$1" = '--help' ]; then
 fi
 
 PROGRAM="$1"
-LOCKFILE="/tmp/once-lock-$PROGRAM"
+LOCKFILE="/var/lock/once-lock-$PROGRAM"
 exec 3>"$LOCKFILE"
 if ! flock --exclusive --nonblock 3; then
     exit $?
