@@ -24,6 +24,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+set -e
+
 usage() {
     cat <<EOF
 once is a simple script used to implement a shell singleton. By wrapping a
