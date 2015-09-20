@@ -56,6 +56,16 @@ if ! flock --exclusive --nonblock 3; then
     exit 1
 fi
 
+# Execute the command and wait for it to finish.
 "$@"
+STATUS=$?
 
+# Cleanup. It's important that we remove the file before closing it, as
+# closing it drops the lock. If we close the file first, it's possible someone
+# else grabs the lock, which we then remove. Since doing an flock on a
+# nonexistent file always succeeds, this would be bad.
+rm "$LOCKFILE"
 exec 3>&-
+
+# Exit with the command's status.
+exit $STATUS
