@@ -32,17 +32,25 @@ once is a simple script used to implement a shell singleton. By wrapping a
 command invocation with once, the program is guaranteed to be the only one
 among others wrapped with once.
 
-Usage: once <COMMAND>
+Usage: once COMMAND
+       once [-l|--lockfile] LOCKFILE COMMAND
 EOF
 }
 
-if [ "$1" = '-h' ] || [ "$1" = '--help' ]; then
+if [ "$1" = -h ] || [ "$1" = --help ]; then
     usage
     exit
 fi
 
-PROGRAM="$1"
-LOCKFILE="/var/lock/once-lock-$PROGRAM"
+if [ "$1" = -l ] || [ "$1" = --lockfile ]; then
+    LOCKFILE="$2"
+    shift 2
+else
+    PROGRAM="$1"
+    LOCKFILE="/var/lock/once-lock-$PROGRAM"
+fi
+
+# Take the lock.
 exec 3>"$LOCKFILE"
 if ! flock --exclusive --nonblock 3; then
     exit 1
