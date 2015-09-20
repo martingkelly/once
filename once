@@ -46,7 +46,7 @@ if [ "$1" = -l ] || [ "$1" = --lockfile ]; then
     LOCKFILE="$2"
     shift 2
 else
-    PROGRAM="$1"
+    PROGRAM="$(basename "$1")"
     LOCKFILE="/var/lock/once-lock-$PROGRAM"
 fi
 
