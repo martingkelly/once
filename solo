@@ -28,12 +28,12 @@ set -e
 
 usage() {
     cat <<EOF
-once is a simple script used to implement a shell singleton. By wrapping a
-command invocation with once, the program is guaranteed to be the only one
-among others wrapped with once.
+$0 is a simple script used to implement a shell singleton. By wrapping a
+command invocation with $0, the program is guaranteed to be the only one
+among others wrapped with $0
 
-Usage: once COMMAND
-       once [-l|--lockfile] LOCKFILE COMMAND
+Usage: $0 COMMAND
+       $0 [-l|--lockfile] LOCKFILE COMMAND
 EOF
 }
 
@@ -47,7 +47,7 @@ if [ "$1" = -l ] || [ "$1" = --lockfile ]; then
     shift 2
 else
     PROGRAM="$(basename "$1")"
-    LOCKFILE="/var/lock/once-lock-$PROGRAM"
+    LOCKFILE="/var/lock/$0-lock-$PROGRAM"
 fi
 
 # Take the lock.
