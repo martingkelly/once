@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-void usage(void) {
+static void usage(void) {
     printf(
 "solo is a simple script used to implement a shell singleton. By wrapping a\n"
 "command invocation with solo, the program is guaranteed to be the only one\n"
@@ -50,7 +51,7 @@ void usage(void) {
 "       solo [-l|--lockfile] LOCKFILE COMMAND\n");
 }
 
-const char *get_lockdir(void) {
+static const char *get_lockdir(void) {
     /* Test possible temporary directory locations. */
     const char *paths[] = {"/var/lock", "/tmp"};
     for (size_t i = 0; i < ARRAY_SIZE(paths); i++) {
@@ -71,9 +72,62 @@ const char *get_lockdir(void) {
     return ".";
 }
 
-const char *lockfile = NULL;
-int lockfile_fd = -1;
-void graceful_exit(int status) {
+static struct command {
+    bool shell;
+    char **cmd;
+} *command = NULL;
+
+static struct command *alloc_command(int argc, char **argv) {
+    command = malloc(sizeof(*command));
+    if (command == NULL) {
+        return NULL;
+    }
+
+    /*
+     * If the user is running under an interactive shell, use that shell to
+     * invoke the command. Otherwise, pass through the command.
+     */
+    char *shell = secure_getenv("SHELL");
+    if (shell == NULL) {
+        command->shell = false;
+        command->cmd = argv;
+        return command;
+    }
+    else {
+        char **cmd = malloc((argc+2) * sizeof(*cmd));
+        if (cmd == NULL) {
+            return NULL;
+        }
+        cmd[0] = shell;
+        cmd[1] = "-c";
+        for (int i = 0; i < argc; i++) {
+            cmd[i+2] = argv[i];
+        }
+        command->shell = shell;
+        command->cmd = cmd;
+    }
+
+    /* TODO DEBUG HACK REMOVE ME */
+    for (int i = 0; i < argc+2; i++) {
+        printf("%s\n", command->cmd[i]);
+    }
+
+    return command;
+}
+
+static void free_command(struct command *cmd) {
+    if (cmd == NULL) {
+        return;
+    }
+
+    if (command->shell) {
+        free(command->cmd);
+    }
+}
+
+static const char *lockfile = NULL;
+static int lockfile_fd = -1;
+static void graceful_exit(int status) {
     /*
      * Cleanup. It's important that we remove the file before closing it, as
      * closing it drops the lock. If we close the file first, it's possible someone
@@ -86,14 +140,17 @@ void graceful_exit(int status) {
     if (lockfile_fd != -1) {
         close(lockfile_fd);
     }
+    if (command != NULL) {
+        free_command(command);
+    }
     exit(status);
 }
 
-void signal_handler(int signal __attribute__((unused))) {
+static void signal_handler(int signal __attribute__((unused))) {
     graceful_exit(1);
 }
 
-int install_signal_handlers(void) {
+static int install_signal_handlers(void) {
     struct sigaction action;
     memset(&action, 0, sizeof(action));
     action.sa_handler = signal_handler;
@@ -156,6 +213,12 @@ int main(int argc, char **argv) {
         lockfile = filepath;
     }
 
+    struct command *cmd = alloc_command(argc - cmd_start, &argv[cmd_start]);
+    if (cmd == NULL) {
+        fprintf(stderr, "Failed to allocate command array!\n");
+        return 1;
+    }
+
     /*
      * Install signal handlers so we can cleanup if something goes wrong after
      * creating the lockfile.
@@ -186,7 +249,7 @@ int main(int argc, char **argv) {
     if (pid == 0) {
         /* Child */
         close(lockfile_fd);
-        result = execvp(argv[cmd_start], &argv[cmd_start]);
+        result = execvp(command->cmd[0], command->cmd);
         if (result == -1) {
             perror("failed to exec program");
             /* Don't try to cleanup; let the parent handle that */
