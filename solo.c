@@ -42,9 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void usage(void) {
     printf(
-"solo is a simple script used to implement a shell singleton. By wrapping a\n"
-"command invocation with solo, the program is guaranteed to be the only one\n"
-"among others wrapped with solo.\n"
+"solo implements a shell singleton. By wrapping acommand invocation with solo\n"
+"solo, the program is guaranteed to be the only one among others wrapped with\n"
+"solo that is running at a given time.\n"
 "\n"
 "Usage: solo COMMAND\n"
 "       solo [-l|--lockfile] LOCKFILE COMMAND\n");
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
         return result;
     }
 
-    int lockfile_fd = creat(lockfile, S_IWUSR);
+    lockfile_fd = creat(lockfile, S_IWUSR);
     if (lockfile_fd == -1) {
         perror("lock file creation failed");
         graceful_exit(errno);

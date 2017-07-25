@@ -8,6 +8,7 @@ project('solo', 'c',
     'warning_level=3',
     'werror=true'])
 
-add_project_arguments([], language: 'c')
+flags = ['-Wshadow']
+add_project_arguments(flags, language: 'c')
 
 executable('solo', 'solo.c', [], install: true)
