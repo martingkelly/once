@@ -182,29 +182,12 @@ int main(int argc, char **argv) {
         graceful_exit(errno);
     }
 
-    pid_t pid = fork();
-    if (pid == 0) {
-        /* Child */
-        close(lockfile_fd);
-        result = execvp(argv[cmd_start], &argv[cmd_start]);
-        if (result == -1) {
-            perror("failed to exec program");
-            /* Don't try to cleanup; let the parent handle that */
-            return errno;
-        }
-    }
-    else if (pid > 0) {
-        /* Parent */
-        result = waitpid(pid, NULL, 0);
-        if (result == -1) {
-            perror("waitpid");
-            graceful_exit(errno);
-        }
-    }
-    else {
-      perror("fork");
-      graceful_exit(errno);
+    /* Let's go! */
+    result = execvp(argv[cmd_start], &argv[cmd_start]);
+    if (result == -1) {
+        perror("failed to exec program");
+        graceful_exit(1);
     }
 
-    graceful_exit(0);
+    return 0;
 }
