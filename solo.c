@@ -34,9 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 
 #include <linux/limits.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
