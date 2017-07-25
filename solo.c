@@ -52,7 +52,7 @@ void usage(void) {
 
 const char *get_lockdir(void) {
     /* Test possible temporary directory locations. */
-    const char *paths[] = {"/var/lock", "/tmp"};
+    static const char *paths[] = {"/var/lock", "/tmp"};
     for (size_t i = 0; i < ARRAY_SIZE(paths); i++) {
         struct stat s;
         const char *path = paths[i];
