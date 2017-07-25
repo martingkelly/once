@@ -89,14 +89,17 @@ void graceful_exit(int status) {
     exit(status);
 }
 
-void signal_handler(int signal __attribute__((unused))) {
+typedef void (*sighand)(int);
+
+void signal_handler(__attribute__((unused)) int signal) {
     graceful_exit(1);
 }
 
-int install_signal_handlers(void) {
+int install_signal_handlers(sighand handler) {
     struct sigaction action;
+
     memset(&action, 0, sizeof(action));
-    action.sa_handler = signal_handler;
+    action.sa_handler = handler;
     int signals[] = { SIGHUP, SIGINT, SIGTERM };
     for (size_t i = 0; i < ARRAY_SIZE(signals); i++) {
         int result = sigaction(signals[i], &action, NULL);
@@ -160,7 +163,7 @@ int main(int argc, char **argv) {
      * Install signal handlers so we can cleanup if something goes wrong after
      * creating the lockfile.
      */
-    int result = install_signal_handlers();
+    int result = install_signal_handlers(signal_handler);
     if (result != 0) {
         return result;
     }
@@ -179,7 +182,21 @@ int main(int argc, char **argv) {
         else {
             perror("cannot take lock");
         }
-        graceful_exit(errno);
+
+        /*
+         * Remove our signal handler to avoid cleaning up the other process's
+         * lock.
+         */
+        result = install_signal_handlers(SIG_DFL);
+        if (result != 0) {
+            perror("could not remove signal handlers");
+        }
+
+        /*
+         * Note that we do not call graceful_exit, as we do not want to cleanup
+         * the other process's lock.
+         */
+        exit(errno);
     }
 
     /* Let's go! */
