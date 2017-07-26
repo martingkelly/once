@@ -98,7 +98,7 @@ int install_signal_handlers(sighand handler) {
 
     memset(&action, 0, sizeof(action));
     action.sa_handler = handler;
-    int signals[] = { SIGHUP, SIGINT, SIGTERM };
+    static int signals[] = { SIGHUP, SIGINT, SIGTERM };
     for (size_t i = 0; i < ARRAY_SIZE(signals); i++) {
         int result = sigaction(signals[i], &action, NULL);
         if (result == -1) {
