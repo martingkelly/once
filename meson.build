@@ -1,7 +1,7 @@
 # Summary.
 project('solo', 'c',
   version: '1.0',
-  license: 'gplv3',
+  license: 'GPLv3',
   default_options: [
     'c_std=c11',
     'buildtype=release',
