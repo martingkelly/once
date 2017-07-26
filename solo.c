@@ -71,7 +71,7 @@ const char *get_lockdir(void) {
 
 const char *lockfile = NULL;
 int lockfile_fd = -1;
-void graceful_exit(int status) {
+void exit_cleanup(int status) {
     /*
      * Cleanup. It's important that we remove the file before closing it, as
      * closing it drops the lock. If we close the file first, it's possible someone
@@ -90,7 +90,7 @@ void graceful_exit(int status) {
 typedef void (*sighand)(int);
 
 void signal_handler(__attribute__((unused)) int signal) {
-    graceful_exit(1);
+    exit_cleanup(1);
 }
 
 int install_signal_handlers(sighand handler) {
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     lockfile_fd = creat(lockfile, S_IWUSR);
     if (lockfile_fd == -1) {
         perror("lock file creation failed");
-        graceful_exit(errno);
+        exit_cleanup(errno);
     }
 
     result = lockf(lockfile_fd, F_TLOCK, 0);
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
         }
 
         /*
-         * Note that we do not call graceful_exit, as we do not want to cleanup
+         * Note that we do not call exit_cleanup, as we do not want to cleanup
          * the other process's lock.
          */
         exit(errno);
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     result = execvp(argv[cmd_start], &argv[cmd_start]);
     if (result == -1) {
         perror("failed to exec program");
-        graceful_exit(1);
+        exit_cleanup(1);
     }
 
     return 0;
