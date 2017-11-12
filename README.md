@@ -1,7 +1,7 @@
 # Solo
-solo is a simple script used to implement a shell singleton. By wrapping a
-command invocation with solo, the program is guaranteed to be the only one
-among others wrapped with solo.
+solo is a simple program used to implement a shell singleton. By wrapping a
+command invocation with solo, the program is guaranteed to be the only one among
+others wrapped with solo.
 
 Usage is as follows:
 ```
